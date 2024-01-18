@@ -71,6 +71,18 @@ class TaskComplete(Resource):
             return {"message": f'Task with ID {task_id} not found'}
 
 class TaskDueDate(Resource):
+    def get(self, task_id=None):
+        if task_id is not None:
+            task = Tasks.tasks.get(task_id)
+            if task:
+                due_date = task.get('due_date', '')
+                return {"message": f'Due date for task with ID {task_id}: {due_date}'}
+            else:
+                return {"message": f'Task with ID {task_id} not found'}
+        else:
+            all_due_dates = {task_id: task.get('due_date', '') for task_id, task in Tasks.tasks.items()}
+            return {"due_dates": all_due_dates}
+
     def put(self, task_id):
         task = Tasks.tasks.get(task_id)
         if task:
@@ -80,14 +92,16 @@ class TaskDueDate(Resource):
         else:
             return {"message": f'Task with ID {task_id} not found'}
 
+
+api.add_resource(TaskDueDate, '/due-date', '/due-date/<int:task_id>')
+
 class CompleteLastTask(Resource):
-    def put(self):
+    def get(self):
         tasks = Tasks.tasks
         if tasks:
             last_task_id = max(tasks.keys())
             task = tasks[last_task_id]
-            task['completed'] = True
-            return {"message": f'Task with ID {last_task_id} marked as completed'}
+            return task
         else:
             return {"message": "No tasks found"}
 
@@ -97,7 +111,7 @@ api.add_resource(About, '/about')
 api.add_resource(Tasks, '/tasks', '/tasks/<int:task_id>')
 api.add_resource(TaskList, '/tasks/list')
 api.add_resource(TaskComplete, '/complete/<int:task_id>/')
-api.add_resource(TaskDueDate, '/due-date/<int:task_id>/')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
