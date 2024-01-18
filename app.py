@@ -1,9 +1,18 @@
 from flask import Flask, request
-from flask_restful import Api, Resource
+from flask_restful import Api, Resource, reqparse
+from flask_sqlalchemy import SQLAlchemy
+from models import db  # Import the db object from models
+from config import Config
+import os
+
+
 
 app = Flask(__name__)
-api = Api(app)
+app.config.from_object(Config)
+db.init_app(app)#Initialize the database
 
+api = Api(app)
+db = SQLAlchemy(app)
 class Tasks(Resource):
     tasks = {}
     task_id_counter = 1
