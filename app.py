@@ -1,43 +1,9 @@
 from flask import Flask, request
 from flask_restful import Api, Resource
-import os
-from flask import Flask, jsonify
 
 app = Flask(__name__)
 api = Api(app)
 
-# Creating a resource class that inherits from Resource
-#class GoodMorning(Resource):
-    #def get(self):
-       # return {"message": "Good morning! How are you today?"}
-#handling post request
-    #def post(self):
-       # return {"message":f"Good Morning !  Data recieved:"}
-#handling patch request
-   # def patch(self,name=""):
-       # return {"message": f"Hello {name}, how are you doing? Patch Request!"}
-#handling a put request
-   # def put(self):
-        #return {"message":"I am putting data"}
-       
-# Adding the URL route and the method to be called when this route is accessed
-#api.add_resource(GoodMorning, '/')
-
-
-
-
-#class UserResource(Resource):
- #   def get(self, user_id=None):
-  #      if user_id:
-   #         return {"user_id": user_id, "username": "name"}
-    #    else:
-     #       return {"message": "Welcome to the root URL!"}
-#
-## Modified route definition to include an optional user_id parameter
-#api.add_resource(UserResource, '/', '/user/<int:user_id>')
-
-
-#FLASKRESTFUL FOR HANDLING TASK OPERATIONS LIKE CREATING UPDATING AND MARKING TASKS AS COMPLETED
 class Tasks(Resource):
     tasks = {}
     task_id_counter = 1
@@ -76,10 +42,62 @@ class Tasks(Resource):
         else:
             return {'message': f'Task with ID {task_id} not found'}
 
+class Welcome(Resource):
+    def get(self):
+        return {"message": "Welcome to the task application!"}
 
-api.add_resource(Tasks, '/', '/tasks/<int:task_id>')
+class About(Resource):
+    def get(self):
+        return {"message": "This is a simple task management API."}
+
+class TaskList(Resource):
+    def get(self):
+        return {"tasks": list(Tasks.tasks.values())}
+
+class TaskComplete(Resource):
+    def get(self, task_id):
+        task = Tasks.tasks.get(task_id)
+        if task:
+            return {"message": f'Task with ID {task_id} is marked as {"completed" if task.get("completed") else "incomplete"}'}
+        else:
+            return {"message": f'Task with ID {task_id} not found'}
+
+    def put(self, task_id):
+        task = Tasks.tasks.get(task_id)
+        if task:
+            task['completed'] = True
+            return {"message": f'Task with ID {task_id} marked as completed'}
+        else:
+            return {"message": f'Task with ID {task_id} not found'}
+
+class TaskDueDate(Resource):
+    def put(self, task_id):
+        task = Tasks.tasks.get(task_id)
+        if task:
+            due_date = request.json.get('due_date', '')
+            task['due_date'] = due_date
+            return {"message": f'Due date updated for task with ID {task_id}'}
+        else:
+            return {"message": f'Task with ID {task_id} not found'}
+
+class CompleteLastTask(Resource):
+    def put(self):
+        tasks = Tasks.tasks
+        if tasks:
+            last_task_id = max(tasks.keys())
+            task = tasks[last_task_id]
+            task['completed'] = True
+            return {"message": f'Task with ID {last_task_id} marked as completed'}
+        else:
+            return {"message": "No tasks found"}
+
+api.add_resource(CompleteLastTask, '/complete')     
+api.add_resource(Welcome, '/')
+api.add_resource(About, '/about')
+api.add_resource(Tasks, '/tasks', '/tasks/<int:task_id>')
+api.add_resource(TaskList, '/tasks/list')
+api.add_resource(TaskComplete, '/complete/<int:task_id>/')
+api.add_resource(TaskDueDate, '/due-date/<int:task_id>/')
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-       
