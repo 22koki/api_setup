@@ -1,18 +1,17 @@
-from flask import Flask, request
+from flask import Flask,request
 from flask_restful import Api, Resource, reqparse
 from flask_sqlalchemy import SQLAlchemy
-from models import db  # Import the db object from models
+from models import db, Task  # Import the db object from models
 from config import Config
-import os
-
-
 
 app = Flask(__name__)
 app.config.from_object(Config)
-db.init_app(app)#Initialize the database
+
+db.init_app(app)  # Initialize the database
 
 api = Api(app)
-db = SQLAlchemy(app)
+
+
 class Tasks(Resource):
     tasks = {}
     task_id_counter = 1
@@ -113,7 +112,14 @@ class CompleteLastTask(Resource):
             return task
         else:
             return {"message": "No tasks found"}
+class TaskResource(Resource):
+    def get(self):
+        tasks = Task.query.all()
+        task_list = [{"id": task.id, "title": task.title, "due_date": task.due_date, "completed": task.completed} for task in tasks]
+        return {"tasks": task_list}
 
+# Add the TaskResource to the API
+api.add_resource(TaskResource, '/tasks')
 api.add_resource(CompleteLastTask, '/complete')     
 api.add_resource(Welcome, '/')
 api.add_resource(About, '/about')
